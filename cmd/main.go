@@ -1,6 +1,7 @@
 package main
 
 import (
+	"davisbento/rinha-backend-golang/config"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -8,6 +9,7 @@ import (
 )
 
 func main() {
+	cfg := config.NewConfig()
 
 	e := echo.New()
 
@@ -16,6 +18,11 @@ func main() {
 
 	e.GET("/", func(c echo.Context) error {
 		return c.HTML(http.StatusOK, "Hello, Echo! <3")
+	})
+
+	e.GET("/clientes/:id/extrato", func(c echo.Context) error {
+		id := c.Param("id")
+		return c.JSON(http.StatusOK, struct{ ID string }{ID: id})
 	})
 
 	e.GET("/health", func(c echo.Context) error {
