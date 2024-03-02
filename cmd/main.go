@@ -2,14 +2,34 @@ package main
 
 import (
 	"davisbento/rinha-backend-golang/config"
+	"fmt"
 	"net/http"
 
+	"github.com/go-pg/pg/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
 	cfg := config.NewConfig()
+
+	// Connect to PostgreSQL database
+	db := pg.Connect(&pg.Options{
+		Addr:     fmt.Sprintf("%s:%d", cfg.DB_HOSTNAME, cfg.DB_PORT),
+		User:     cfg.DB_USER,
+		Password: cfg.DB_PASSWORD,
+		Database: cfg.DB_NAME,
+	})
+
+	defer db.Close()
+
+	// Check connection
+	_, err := db.Exec("SELECT 1")
+	if err != nil {
+		fmt.Printf("Error connecting to database: %s \n", err)
+	} else {
+		fmt.Println("Connected to database successfully.")
+	}
 
 	e := echo.New()
 

@@ -7,11 +7,11 @@ import (
 )
 
 type Config struct {
-	DBHost     string
-	DBPort     int
-	DBUsername string
-	DBPassword string
-	DBName     string
+	DB_HOSTNAME string
+	DB_PORT     int
+	DB_USER     string
+	DB_PASSWORD string
+	DB_NAME     string
 }
 
 func NewConfig() *Config {
