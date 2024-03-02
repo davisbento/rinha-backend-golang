@@ -2,6 +2,8 @@ package main
 
 import (
 	"davisbento/rinha-backend-golang/config"
+	"davisbento/rinha-backend-golang/handlers"
+	"davisbento/rinha-backend-golang/services"
 	"fmt"
 	"net/http"
 
@@ -31,6 +33,9 @@ func main() {
 		fmt.Println("Connected to database successfully.")
 	}
 
+	clientService := services.NewClientService(db)
+	clientHandler := handlers.NewClienteHandler(clientService)
+
 	e := echo.New()
 
 	e.Use(middleware.Logger())
@@ -40,10 +45,7 @@ func main() {
 		return c.HTML(http.StatusOK, "Hello, Echo! <3")
 	})
 
-	e.GET("/clientes/:id/extrato", func(c echo.Context) error {
-		id := c.Param("id")
-		return c.JSON(http.StatusOK, struct{ ID string }{ID: id})
-	})
+	e.GET("/clientes/:id/extrato", clientHandler.GetExtractHandler())
 
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, struct{ Status string }{Status: "OK"})
