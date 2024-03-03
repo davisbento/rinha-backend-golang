@@ -36,6 +36,9 @@ func main() {
 	clientService := services.NewClientService(db)
 	clientHandler := handlers.NewClienteHandler(clientService)
 
+	extratoService := services.NewExtratoService(db)
+	extratoHandler := handlers.NewExtratoHandler(extratoService)
+
 	e := echo.New()
 
 	e.Use(middleware.Logger())
@@ -46,6 +49,7 @@ func main() {
 	})
 
 	e.GET("/clientes/:id/extrato", clientHandler.GetExtractHandler())
+	e.POST("/clientes/:id/transacoes", extratoHandler.PostExtractHandler())
 
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, struct{ Status string }{Status: "OK"})
