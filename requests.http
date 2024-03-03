@@ -3,6 +3,9 @@ POST http://localhost:3000/clientes/2/transacoes HTTP/1.1
 content-type: application/json
 
 {
+    "valor": 200,
+    "tipo" : "c",
+    "descricao" : "descricao"
 }
 
 ###

@@ -15,14 +15,14 @@ func NewExtratoService(db *pg.DB) *ExtratoService {
 	return &ExtratoService{DB: db}
 }
 
-type ExtratoInsert struct {
+type ExtratoInsertDTO struct {
 	ClienteID int
 	Valor     int
 	Tipo      string
 	Descricao string
 }
 
-func (es *ExtratoService) InsertExtrato(payload ExtratoInsert) error {
+func (es *ExtratoService) InsertExtrato(payload ExtratoInsertDTO) error {
 	// validate payload
 	if payload.ClienteID <= 0 {
 		return fmt.Errorf("ClienteID is required")
@@ -78,4 +78,30 @@ func (es *ExtratoService) GetExtratoSumByClienteId(clienteID int) (int, error) {
 	}
 
 	return sum, nil
+}
+
+func (es *ExtratoService) GetLast10TransacoesByClienteId(clienteID int) ([]entity.TransacaoDTO, error) {
+	var extratos []entity.Extrato
+
+	err := es.DB.Model(&extratos).Where("cliente_id = ?", clienteID).Order("id DESC").Limit(10).Select()
+
+	if err != nil {
+		fmt.Printf("Error getting extrato: %s \n", err)
+		return nil, err
+	}
+
+	transacoes := make([]entity.TransacaoDTO, 0)
+
+	for _, extrato := range extratos {
+		transacao := entity.TransacaoDTO{
+			Valor:       extrato.Valor,
+			Tipo:        extrato.Tipo,
+			Descricao:   extrato.Descricao,
+			RealizadaEm: extrato.Data,
+		}
+
+		transacoes = append(transacoes, transacao)
+	}
+
+	return transacoes, nil
 }

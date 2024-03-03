@@ -34,10 +34,8 @@ func main() {
 	}
 
 	clientService := services.NewClientService(db)
-	clientHandler := handlers.NewClienteHandler(clientService)
-
 	extratoService := services.NewExtratoService(db)
-	extratoHandler := handlers.NewExtratoHandler(extratoService)
+	extratoHandler := handlers.NewExtratoHandler(extratoService, clientService)
 
 	e := echo.New()
 
@@ -48,7 +46,7 @@ func main() {
 		return c.HTML(http.StatusOK, "Hello, Echo! <3")
 	})
 
-	e.GET("/clientes/:id/extrato", clientHandler.GetExtractHandler())
+	e.GET("/clientes/:id/extrato", extratoHandler.GetExtractHandler())
 	e.POST("/clientes/:id/transacoes", extratoHandler.PostExtractHandler())
 
 	e.GET("/health", func(c echo.Context) error {
