@@ -50,6 +50,22 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: "Invalid ID"})
 		}
 
+		client, err := ch.ClientService.GetClientById(idInt)
+
+		if err != nil {
+			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
+		}
+
+		hasEnoughLimit, err := services.ClientHasEnoughLimit(client.Limite, t.Valor, t.Tipo)
+
+		if err != nil {
+			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Error checking limit"})
+		}
+
+		if !hasEnoughLimit {
+			return c.JSON(http.StatusUnprocessableEntity, struct{ Error string }{Error: "Client has no limit"})
+		}
+
 		extratoDTO := services.ExtratoInsertDTO{
 			ClienteID: idInt,
 			Valor:     t.Valor,
@@ -66,12 +82,6 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 		}
 
 		saldo, err := ch.ExtratoService.GetExtratoSumByClienteId(idInt)
-
-		if err != nil {
-			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
-		}
-
-		client, err := ch.ClientService.GetClientById(idInt)
 
 		if err != nil {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
