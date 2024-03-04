@@ -30,7 +30,8 @@ type ExtratoPayload struct {
 }
 
 type ResponsePostExtract struct {
-	Saldo int `json:"saldo"`
+	Saldo  int `json:"saldo"`
+	Limite int `json:"limite"`
 }
 
 func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
@@ -70,9 +71,18 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
 		}
 
+		client, err := ch.ClientService.GetClientById(idInt)
+
+		if err != nil {
+			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
+		}
+
 		fmt.Printf("Saldo: %d \n", saldo)
 
-		return c.JSON(http.StatusOK, ResponsePostExtract{Saldo: saldo})
+		return c.JSON(http.StatusOK, ResponsePostExtract{
+			Saldo:  saldo,
+			Limite: client.Limite,
+		})
 	}
 }
 
