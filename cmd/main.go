@@ -3,6 +3,7 @@ package main
 import (
 	"davisbento/rinha-backend-golang/config"
 	"davisbento/rinha-backend-golang/handlers"
+	"davisbento/rinha-backend-golang/migrations"
 	"davisbento/rinha-backend-golang/services"
 	"fmt"
 	"net/http"
@@ -31,6 +32,16 @@ func main() {
 		fmt.Printf("Error connecting to database: %s \n", err)
 	} else {
 		fmt.Println("Connected to database successfully.")
+	}
+
+	migrations := migrations.NewMigrations(db)
+
+	err = migrations.Run()
+
+	if err != nil {
+		fmt.Printf("Error running migrations: %s \n", err)
+	} else {
+		fmt.Println("Migrations ran successfully.")
 	}
 
 	clientService := services.NewClientService(db)
