@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -25,6 +26,16 @@ func NewConfig() *Config {
 	// Read in the config file
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Printf("Error reading config file: %s \n", err)
+
+		// if dont find the file, try to get the env variables
+		config = Config{
+			DB_HOSTNAME: os.Getenv("DB_HOSTNAME"),
+			DB_PORT:     5432,
+			DB_USER:     os.Getenv("DB_USER"),
+			DB_PASSWORD: os.Getenv("DB_PASSWORD"),
+			DB_NAME:     os.Getenv("DB_NAME"),
+		}
+
 	}
 
 	// Unmarshal the config

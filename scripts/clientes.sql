@@ -1,8 +1,7 @@
 create table clientes (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(50),
-  limit
-    INT
+  nome VARCHAR(50),
+  limite INT
 );
 
 INSERT INTO
