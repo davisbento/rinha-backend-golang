@@ -59,7 +59,7 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 		hasEnoughLimit, err := services.ClientHasEnoughLimit(client.Limite, t.Valor, t.Tipo)
 
 		if err != nil {
-			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Error checking limit"})
+			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: "Error checking limit"})
 		}
 
 		if !hasEnoughLimit {
@@ -78,13 +78,13 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 		if err != nil {
 			fmt.Printf("Error inserting extrato: %s \n", err)
 			errMessage := fmt.Sprintln(err)
-			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: errMessage})
+			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: errMessage})
 		}
 
 		saldo, err := ch.ExtratoService.GetExtratoSumByClienteId(idInt)
 
 		if err != nil {
-			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
+			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: "Client not found"})
 		}
 
 		fmt.Printf("Saldo: %d \n", saldo)

@@ -74,6 +74,15 @@ func (m *Migrations) Run() error {
 			return err
 		}
 
+		// create index in the client_id
+		_, err = m.db.Exec(`
+			CREATE INDEX idx_cliente_id ON extratos (cliente_id);
+		`)
+
+		if err != nil {
+			return err
+		}
+
 		fmt.Println("table extrato created successfully.")
 	}
 
