@@ -50,8 +50,8 @@ func main() {
 
 	e := echo.New()
 
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.HideBanner = true
 
 	e.GET("/", func(c echo.Context) error {
 		return c.HTML(http.StatusOK, "Hello, Echo! <3")
@@ -66,5 +66,6 @@ func main() {
 
 	httpPort := "3000"
 
-	e.Logger.Fatal(e.Start(":" + httpPort))
+	e.Start(":" + httpPort)
+	fmt.Printf("Server running on port %s \n", httpPort)
 }

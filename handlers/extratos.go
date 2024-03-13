@@ -87,8 +87,6 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: "Client not found"})
 		}
 
-		fmt.Printf("Saldo: %d \n", saldo)
-
 		return c.JSON(http.StatusOK, ResponsePostExtract{
 			Saldo:  saldo,
 			Limite: client.Limite,
