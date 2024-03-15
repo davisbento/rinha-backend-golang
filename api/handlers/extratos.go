@@ -85,14 +85,12 @@ func (eh *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 		// no caso, positivo ou negativo
 		value := services.GetValue(body.Valor, body.Tipo)
 
-		saldo, err := eh.ExtratoService.GetExtratoSumByClienteId(idInt)
-
 		if err != nil {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Error getting saldo"})
 		}
 
 		// o saldo atual + o valor da transação
-		newSaldo := saldo + value
+		newSaldo := client.Saldo + value
 
 		hasEnoughLimit := services.ClientHasEnoughLimit(client.Limite, newSaldo, body.Tipo)
 
@@ -111,8 +109,14 @@ func (eh *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 
 		if err != nil {
 			fmt.Printf("Error inserting extrato: %s \n", err)
-			errMessage := fmt.Sprintln(err)
-			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: errMessage})
+			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: err.Error()})
+		}
+
+		err = eh.ClientService.UpdateClientSaldo(idInt, newSaldo)
+
+		if err != nil {
+			fmt.Printf("Error updating client saldo: %s \n", err)
+			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: err.Error()})
 		}
 
 		return c.JSON(http.StatusOK, ResponsePostExtract{

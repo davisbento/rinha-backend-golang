@@ -28,6 +28,22 @@ func (cs *ClientService) GetClientById(id int) (*entity.Cliente, error) {
 	return client, nil
 }
 
+func (cs *ClientService) UpdateClientSaldo(id int, newBalance int) error {
+	client := &entity.Cliente{
+		ID:    id,
+		Saldo: newBalance,
+	}
+
+	_, err := cs.DB.Model(client).Column("saldo").WherePK().Update()
+
+	if err != nil {
+		fmt.Printf("Error updating client saldo: %s \n", err)
+		return err
+	}
+
+	return nil
+}
+
 func GetValue(valor int, tipo string) int {
 	if tipo == "c" {
 		return valor

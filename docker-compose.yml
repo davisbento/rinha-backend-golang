@@ -22,7 +22,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: '70MB'
+          memory: '200MB'
 
   api-go02:
     # Essa sintaxe reusa o que foi declarado em 'api01'.
