@@ -49,25 +49,6 @@ func (es *ExtratoService) InsertExtrato(payload entity.ExtratoInsertDTO) error {
 	return nil
 }
 
-func (es *ExtratoService) GetExtratoSumByClienteId(clienteID int) (int, error) {
-	var extratos []entity.Extrato
-
-	err := es.db.Model(&extratos).Where("cliente_id = ?", clienteID).Select()
-
-	if err != nil {
-		fmt.Printf("Error getting extrato: %s \n", err)
-		return 0, err
-	}
-
-	sum := 0
-
-	for _, extrato := range extratos {
-		sum += extrato.Valor
-	}
-
-	return sum, nil
-}
-
 func (es *ExtratoService) GetLast10TransacoesByClienteId(clienteID int) ([]entity.TransacaoDTO, error) {
 	var extratos []entity.Extrato
 

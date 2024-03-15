@@ -85,10 +85,6 @@ func (eh *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 		// no caso, positivo ou negativo
 		value := services.GetValue(body.Valor, body.Tipo)
 
-		if err != nil {
-			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Error getting saldo"})
-		}
-
 		// o saldo atual + o valor da transação
 		newSaldo := client.Saldo + value
 
@@ -136,7 +132,7 @@ func (eh *ExtratoHandler) GetExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusUnprocessableEntity, struct{ Error string }{Error: "Invalid ID"})
 		}
 
-		if idInt > 5 {
+		if idInt > 5 && idInt <= 0 {
 			// as we are using a mock database, we can't have more than 5 clients
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
 		}
@@ -162,12 +158,6 @@ func (eh *ExtratoHandler) GetExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
 		}
 
-		saldoTotal, err := eh.ExtratoService.GetExtratoSumByClienteId(idInt)
-
-		if err != nil {
-			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Error getting saldo"})
-		}
-
 		last10Transacoes, err := eh.ExtratoService.GetLast10TransacoesByClienteId(idInt)
 
 		if err != nil {
@@ -176,7 +166,7 @@ func (eh *ExtratoHandler) GetExtractHandler() func(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, entity.ResponseExtratoGet{
 			Saldo: entity.SaldoDTO{
-				Total:       saldoTotal,
+				Total:       client.Saldo,
 				DataExtrato: time.Now(),
 				Limite:      client.Limite,
 			},
