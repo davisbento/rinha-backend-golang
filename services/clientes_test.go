@@ -9,23 +9,21 @@ import (
 func TestClientHasEnoughLimit(t *testing.T) {
 	tests := []struct {
 		clientLimit int
+		saldo       int
 		valor       int
 		tipo        string
 		expected    bool
 	}{
-		{clientLimit: 100, valor: 50, tipo: "c", expected: true},
-		{clientLimit: 100, valor: 150, tipo: "d", expected: true},
-		{clientLimit: 100, valor: 250, tipo: "d", expected: false},
-		{clientLimit: 100, valor: 200, tipo: "d", expected: true},
-		{clientLimit: 0, valor: 50, tipo: "d", expected: false},
-		{clientLimit: -100, valor: 150, tipo: "d", expected: false},
-		{clientLimit: 1000, valor: 2001, tipo: "d", expected: false},
-		{clientLimit: 1000, valor: 2000, tipo: "d", expected: true},
+		{100, 100, 100, "c", true},
+		{100, 100, -100, "d", false},
+		{100, 100, -101, "d", false},
+		{500, 600, -400, "d", false},
+		{500, 600, 400, "c", true},
+		{1000, 900, -100, "d", false},
 	}
 
 	for _, test := range tests {
-		result, err := ClientHasEnoughLimit(test.clientLimit, test.valor, test.tipo)
-		assert.NoError(t, err, "unexpected error")
+		result := ClientHasEnoughLimit(test.clientLimit, test.saldo, test.valor, test.tipo)
 		assert.Equal(t, test.expected, result,
 			"for clientLimit=%d, valor=%d, tipo=%s, expected %t, but got %t",
 			test.clientLimit, test.valor, test.tipo, test.expected, result)

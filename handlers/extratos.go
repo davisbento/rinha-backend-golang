@@ -23,12 +23,6 @@ func NewExtratoHandler(es *services.ExtratoService, cs *services.ClientService) 
 	}
 }
 
-type ExtratoPayload struct {
-	Tipo      string `json:"tipo"`
-	Valor     int    `json:"valor"`
-	Descricao string `json:"descricao"`
-}
-
 type ResponsePostExtract struct {
 	Saldo  int `json:"saldo"`
 	Limite int `json:"limite"`
@@ -38,16 +32,27 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 	return func(c echo.Context) error {
 		id := c.Param("id")
 
-		t := new(ExtratoPayload)
+		body := new(entity.ExtratoBodyDTO)
 
-		if err := c.Bind(t); err != nil {
+		if err := c.Bind(body); err != nil {
 			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: "Invalid payload"})
 		}
 
 		idInt, err := strconv.Atoi(id)
 
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: "Invalid ID"})
+			return c.JSON(http.StatusUnprocessableEntity, struct{ Error string }{Error: "Invalid ID"})
+		}
+
+		if idInt > 5 || idInt <= 0 {
+			// as we are using a mock database, we can't have more than 5 clients
+			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client ID"})
+		}
+
+		isPayloadValid := services.ValidateExtratoPayload(body)
+
+		if isPayloadValid != nil {
+			return c.JSON(http.StatusUnprocessableEntity, struct{ Error string }{Error: isPayloadValid.Error()})
 		}
 
 		client, err := ch.ClientService.GetClientById(idInt)
@@ -56,21 +61,31 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
 		}
 
-		hasEnoughLimit, err := services.ClientHasEnoughLimit(client.Limite, t.Valor, t.Tipo)
+		value := services.GetValue(body.Valor, body.Tipo)
+
+		saldo, err := ch.ExtratoService.GetExtratoSumByClienteId(idInt)
 
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: "Error checking limit"})
+			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Error getting saldo"})
 		}
+
+		// o saldo atual + o valor da transação
+		newSaldo := saldo + value
+
+		fmt.Printf("Saldo: %d \n", newSaldo)
+		fmt.Printf("Valor: %d \n", value)
+
+		hasEnoughLimit := services.ClientHasEnoughLimit(client.Limite, newSaldo, body.Tipo)
 
 		if !hasEnoughLimit {
 			return c.JSON(http.StatusUnprocessableEntity, struct{ Error string }{Error: "Client has no limit"})
 		}
 
-		extratoDTO := services.ExtratoInsertDTO{
+		extratoDTO := entity.ExtratoInsertDTO{
 			ClienteID: idInt,
-			Valor:     t.Valor,
-			Tipo:      t.Tipo,
-			Descricao: t.Descricao,
+			Valor:     value,
+			Tipo:      body.Tipo,
+			Descricao: body.Descricao,
 		}
 
 		err = ch.ExtratoService.InsertExtrato(extratoDTO)
@@ -81,14 +96,8 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: errMessage})
 		}
 
-		saldo, err := ch.ExtratoService.GetExtratoSumByClienteId(idInt)
-
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: "Client not found"})
-		}
-
 		return c.JSON(http.StatusOK, ResponsePostExtract{
-			Saldo:  saldo,
+			Saldo:  newSaldo,
 			Limite: client.Limite,
 		})
 	}
@@ -101,7 +110,12 @@ func (ch *ExtratoHandler) GetExtractHandler() func(c echo.Context) error {
 		idInt, err := strconv.Atoi(id)
 
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, struct{ Error string }{Error: "Invalid ID"})
+			return c.JSON(http.StatusUnprocessableEntity, struct{ Error string }{Error: "Invalid ID"})
+		}
+
+		if idInt > 5 {
+			// as we are using a mock database, we can't have more than 5 clients
+			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
 		}
 
 		client, err := ch.ClientService.GetClientById(idInt)

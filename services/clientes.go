@@ -28,19 +28,20 @@ func (cs *ClientService) GetClientById(id int) (*entity.Cliente, error) {
 	return client, nil
 }
 
-func ClientHasEnoughLimit(clientLimit int, valor int, tipo string) (bool, error) {
+func GetValue(valor int, tipo string) int {
 	if tipo == "c" {
-		return true, nil
+		return valor
 	}
 
-	// o cliente pode gastar até o dobro do limite em débito
-	// ex: se o limite é 100, o cliente pode gastar até 200
-	// o limite nao pode ser negativo
-	maxLimit := clientLimit * 2
+	return valor * -1
+}
 
-	if maxLimit < valor {
-		return false, nil
+func ClientHasEnoughLimit(clientLimit int, saldo int, tipo string) bool {
+	if tipo == "c" {
+		return true
 	}
 
-	return true, nil
+	maxLimit := clientLimit * -1
+
+	return saldo >= maxLimit
 }

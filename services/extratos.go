@@ -15,19 +15,7 @@ func NewExtratoService(db *pg.DB) *ExtratoService {
 	return &ExtratoService{DB: db}
 }
 
-type ExtratoInsertDTO struct {
-	ClienteID int
-	Valor     int
-	Tipo      string
-	Descricao string
-}
-
-func (es *ExtratoService) InsertExtrato(payload ExtratoInsertDTO) error {
-	// validate payload
-	if payload.ClienteID <= 0 {
-		return fmt.Errorf("ClienteID is required")
-	}
-
+func ValidateExtratoPayload(payload *entity.ExtratoBodyDTO) error {
 	if payload.Valor <= 0 {
 		return fmt.Errorf("valor is required")
 	}
@@ -40,6 +28,10 @@ func (es *ExtratoService) InsertExtrato(payload ExtratoInsertDTO) error {
 		return fmt.Errorf("descricao is required")
 	}
 
+	return nil
+}
+
+func (es *ExtratoService) InsertExtrato(payload entity.ExtratoInsertDTO) error {
 	extrato := &entity.Extrato{
 		ClienteID: payload.ClienteID,
 		Valor:     payload.Valor,
@@ -70,11 +62,7 @@ func (es *ExtratoService) GetExtratoSumByClienteId(clienteID int) (int, error) {
 	sum := 0
 
 	for _, extrato := range extratos {
-		if extrato.Tipo == "c" {
-			sum += extrato.Valor
-		} else {
-			sum -= extrato.Valor
-		}
+		sum += extrato.Valor
 	}
 
 	return sum, nil
