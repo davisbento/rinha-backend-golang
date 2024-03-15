@@ -61,6 +61,8 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
 		}
 
+		// pode ser um crédito ou um débito
+		// no caso, positivo ou negativo
 		value := services.GetValue(body.Valor, body.Tipo)
 
 		saldo, err := ch.ExtratoService.GetExtratoSumByClienteId(idInt)
