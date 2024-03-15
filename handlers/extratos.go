@@ -74,9 +74,6 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 		// o saldo atual + o valor da transação
 		newSaldo := saldo + value
 
-		fmt.Printf("Saldo: %d \n", newSaldo)
-		fmt.Printf("Valor: %d \n", value)
-
 		hasEnoughLimit := services.ClientHasEnoughLimit(client.Limite, newSaldo, body.Tipo)
 
 		if !hasEnoughLimit {
