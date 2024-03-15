@@ -58,8 +58,10 @@ func (eh *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusUnprocessableEntity, struct{ Error string }{Error: isPayloadValid.Error()})
 		}
 
+		context := c.Request().Context()
+
 		for {
-			lock, err := eh.redis.GetDbLock(c.Request().Context())
+			lock, err := eh.redis.GetDbLock(context)
 
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, struct{ Error string }{Error: "Failed to aquire Db lock"})
@@ -70,8 +72,8 @@ func (eh *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			}
 		}
 
-		eh.redis.LockDb(c.Request().Context())
-		defer eh.redis.UnlockDb(c.Request().Context())
+		eh.redis.LockDb(context)
+		defer eh.redis.UnlockDb(context)
 
 		client, err := eh.ClientService.GetClientById(idInt)
 
@@ -120,7 +122,7 @@ func (eh *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 	}
 }
 
-func (ch *ExtratoHandler) GetExtractHandler() func(c echo.Context) error {
+func (eh *ExtratoHandler) GetExtractHandler() func(c echo.Context) error {
 	return func(c echo.Context) error {
 		id := c.Param("id")
 
@@ -135,19 +137,34 @@ func (ch *ExtratoHandler) GetExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
 		}
 
-		client, err := ch.ClientService.GetClientById(idInt)
+		context := c.Request().Context()
+
+		for {
+			lock, err := eh.redis.GetDbLock(context)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, struct{ Error string }{Error: "Failed to aquire Db lock"})
+			}
+			if lock != "1" {
+				break
+			}
+		}
+
+		eh.redis.LockDb(context)
+		defer eh.redis.UnlockDb(context)
+
+		client, err := eh.ClientService.GetClientById(idInt)
 
 		if err != nil {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
 		}
 
-		saldoTotal, err := ch.ExtratoService.GetExtratoSumByClienteId(idInt)
+		saldoTotal, err := eh.ExtratoService.GetExtratoSumByClienteId(idInt)
 
 		if err != nil {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Error getting saldo"})
 		}
 
-		last10Transacoes, err := ch.ExtratoService.GetLast10TransacoesByClienteId(idInt)
+		last10Transacoes, err := eh.ExtratoService.GetLast10TransacoesByClienteId(idInt)
 
 		if err != nil {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Error getting transacoes"})
