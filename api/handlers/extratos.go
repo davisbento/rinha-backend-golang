@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"davisbento/rinha-backend-golang/entity"
-	"davisbento/rinha-backend-golang/services"
+	"davisbento/rinha-backend-golang/api/entity"
+	redis "davisbento/rinha-backend-golang/api/infra"
+	"davisbento/rinha-backend-golang/api/services"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,12 +15,14 @@ import (
 type ExtratoHandler struct {
 	ExtratoService *services.ExtratoService
 	ClientService  *services.ClientService
+	redis          *redis.Redis
 }
 
-func NewExtratoHandler(es *services.ExtratoService, cs *services.ClientService) *ExtratoHandler {
+func NewExtratoHandler(es *services.ExtratoService, cs *services.ClientService, redis *redis.Redis) *ExtratoHandler {
 	return &ExtratoHandler{
 		ExtratoService: es,
 		ClientService:  cs,
+		redis:          redis,
 	}
 }
 
@@ -28,7 +31,7 @@ type ResponsePostExtract struct {
 	Limite int `json:"limite"`
 }
 
-func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
+func (eh *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 	return func(c echo.Context) error {
 		id := c.Param("id")
 
@@ -55,7 +58,22 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			return c.JSON(http.StatusUnprocessableEntity, struct{ Error string }{Error: isPayloadValid.Error()})
 		}
 
-		client, err := ch.ClientService.GetClientById(idInt)
+		for {
+			lock, err := eh.redis.GetDbLock(c.Request().Context())
+
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, struct{ Error string }{Error: "Failed to aquire Db lock"})
+			}
+
+			if lock != "1" {
+				break
+			}
+		}
+
+		eh.redis.LockDb(c.Request().Context())
+		defer eh.redis.UnlockDb(c.Request().Context())
+
+		client, err := eh.ClientService.GetClientById(idInt)
 
 		if err != nil {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Client not found"})
@@ -65,7 +83,7 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 		// no caso, positivo ou negativo
 		value := services.GetValue(body.Valor, body.Tipo)
 
-		saldo, err := ch.ExtratoService.GetExtratoSumByClienteId(idInt)
+		saldo, err := eh.ExtratoService.GetExtratoSumByClienteId(idInt)
 
 		if err != nil {
 			return c.JSON(http.StatusNotFound, struct{ Error string }{Error: "Error getting saldo"})
@@ -87,7 +105,7 @@ func (ch *ExtratoHandler) PostExtractHandler() func(c echo.Context) error {
 			Descricao: body.Descricao,
 		}
 
-		err = ch.ExtratoService.InsertExtrato(extratoDTO)
+		err = eh.ExtratoService.InsertExtrato(extratoDTO)
 
 		if err != nil {
 			fmt.Printf("Error inserting extrato: %s \n", err)

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"davisbento/rinha-backend-golang/config"
-	"davisbento/rinha-backend-golang/handlers"
-	"davisbento/rinha-backend-golang/migrations"
-	"davisbento/rinha-backend-golang/services"
+	"davisbento/rinha-backend-golang/api/config"
+	"davisbento/rinha-backend-golang/api/handlers"
+	redis "davisbento/rinha-backend-golang/api/infra"
+	"davisbento/rinha-backend-golang/api/migrations"
+	"davisbento/rinha-backend-golang/api/services"
 	"fmt"
 	"net/http"
 
@@ -44,9 +45,11 @@ func main() {
 		fmt.Println("Migrations ran successfully.")
 	}
 
+	redis := redis.GetInstance(cfg.REDIS_URL)
+
 	clientService := services.NewClientService(db)
 	extratoService := services.NewExtratoService(db)
-	extratoHandler := handlers.NewExtratoHandler(extratoService, clientService)
+	extratoHandler := handlers.NewExtratoHandler(extratoService, clientService, redis)
 
 	e := echo.New()
 

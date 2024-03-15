@@ -1,7 +1,7 @@
 package services
 
 import (
-	"davisbento/rinha-backend-golang/entity"
+	"davisbento/rinha-backend-golang/api/entity"
 	"fmt"
 
 	"github.com/go-pg/pg/v10"

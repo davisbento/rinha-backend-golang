@@ -9,6 +9,7 @@ services:
       - DB_USER=admin
       - DB_NAME=rinha
       - DB_PASSWORD=123
+      - REDIS_URL=redis:6379/0
 
     ports:
       - '8081:3000'
@@ -47,6 +48,21 @@ services:
         limits:
           cpus: '0.45'
           memory: '40MB'
+
+  redis:
+    image: redis:7.2.4-alpine3.19
+    command: redis-server
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 5s
+    ports:
+      - '6379:6379'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 10MB
 
   db:
     image: postgres:alpine

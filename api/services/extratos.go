@@ -1,18 +1,18 @@
 package services
 
 import (
-	"davisbento/rinha-backend-golang/entity"
+	"davisbento/rinha-backend-golang/api/entity"
 	"fmt"
 
 	"github.com/go-pg/pg/v10"
 )
 
 type ExtratoService struct {
-	DB *pg.DB
+	db *pg.DB
 }
 
 func NewExtratoService(db *pg.DB) *ExtratoService {
-	return &ExtratoService{DB: db}
+	return &ExtratoService{db: db}
 }
 
 func ValidateExtratoPayload(payload *entity.ExtratoBodyDTO) error {
@@ -39,7 +39,7 @@ func (es *ExtratoService) InsertExtrato(payload entity.ExtratoInsertDTO) error {
 		Descricao: payload.Descricao,
 	}
 
-	_, err := es.DB.Model(extrato).Insert()
+	_, err := es.db.Model(extrato).Insert()
 
 	if err != nil {
 		fmt.Printf("Error inserting extrato: %s \n", err)
@@ -52,7 +52,7 @@ func (es *ExtratoService) InsertExtrato(payload entity.ExtratoInsertDTO) error {
 func (es *ExtratoService) GetExtratoSumByClienteId(clienteID int) (int, error) {
 	var extratos []entity.Extrato
 
-	err := es.DB.Model(&extratos).Where("cliente_id = ?", clienteID).Select()
+	err := es.db.Model(&extratos).Where("cliente_id = ?", clienteID).Select()
 
 	if err != nil {
 		fmt.Printf("Error getting extrato: %s \n", err)
@@ -71,7 +71,7 @@ func (es *ExtratoService) GetExtratoSumByClienteId(clienteID int) (int, error) {
 func (es *ExtratoService) GetLast10TransacoesByClienteId(clienteID int) ([]entity.TransacaoDTO, error) {
 	var extratos []entity.Extrato
 
-	err := es.DB.Model(&extratos).Where("cliente_id = ?", clienteID).Order("id DESC").Limit(10).Select()
+	err := es.db.Model(&extratos).Where("cliente_id = ?", clienteID).Order("id DESC").Limit(10).Select()
 
 	if err != nil {
 		fmt.Printf("Error getting extrato: %s \n", err)
